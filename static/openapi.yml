@@ -1,0 +1,289 @@
+﻿openapi: 3.0.3
+info:
+  title: Image Viewer
+  version: 1.0.0
+  description: |
+    Webapp to upload and view images.
+servers:
+  - url: http://localhost:3000
+paths:
+  /images/first:
+    get:
+      summary: Get the first image
+      responses:
+        "200":
+          description: First image with top comments and total image count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImageResponse"
+        "404":
+          description: No images found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /images/{id}/next:
+    get:
+      summary: Get the next image after the given id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Next image
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImageResponse"
+        "404":
+          description: No next image exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /images/{id}/prev:
+    get:
+      summary: Get the previous image before the given id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Previous image
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImageResponse"
+        "404":
+          description: No previous image exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /images/{id}/file:
+    get:
+      summary: Serve image file or redirect to external URL
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Image file served (local)
+          content:
+            application/octet-stream: {}
+        "302":
+          description: Redirect to external image URL
+        "404":
+          description: Image not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /images:
+    post:
+      summary: Upload or create an image record
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                title:
+                  type: string
+                author:
+                  type: string
+                url:
+                  type: string
+              required: []
+      responses:
+        "200":
+          description: Image created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+  /images/{id}:
+    delete:
+      summary: Delete image and its comments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Image deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "404":
+          description: Image not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /images/{id}/comments:
+    get:
+      summary: Get paginated comments for an image
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Paginated comments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedComments"
+    post:
+      summary: Add a comment to an image
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                author:
+                  type: string
+                content:
+                  type: string
+              required:
+                - content
+      responses:
+        "200":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "404":
+          description: Image not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /comments/{id}:
+    delete:
+      summary: Delete a comment by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Comment deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "404":
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    Image:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        author:
+          type: string
+        url:
+          type: string
+        isLocal:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+        author:
+          type: string
+        content:
+          type: string
+        ImageId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+    ImageResponse:
+      type: object
+      properties:
+        image:
+          $ref: "#/components/schemas/Image"
+        count:
+          type: integer
+        topComments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+    PaginatedComments:
+      type: object
+      properties:
+        comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+        pageCount:
+          type: integer
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        count:
+          type: integer
+          nullable: true

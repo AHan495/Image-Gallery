@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Image Viewer</title>
+    <link href="styles/cols.css" rel="stylesheet" type="text/css" />
+    <link href="styles/main.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <div class="main">
+      <!-- Log in -->
+      <div class="page-login hidden">
+        <form class="addItemForm authForm login-form">
+          <button type="button" class="backButton uiElement iconButton"></button>
+          <br />
+          <p class="primaryText">Log in to your account</p>
+          <input
+            type="text"
+            class="mainButton col-12 loginUsername"
+            name="loginUsername"
+            placeholder="Username"
+            required
+          />
+          <input
+            type="password"
+            class="mainButton col-12 loginPassword"
+            name="loginPassword"
+            placeholder="Password"
+            required
+          />
+          <button type="submit" class="mainButton col-12">Login</button>
+          <p class="primaryText clickableText signUpText">
+            Don't have an account? Sign up
+          </p>
+        </form>
+      </div>
+
+      <!-- Sign up -->
+      <div class="page-signup hidden">
+        <form class="addItemForm authForm signup-form">
+          <button type="button" class="backButton uiElement iconButton"></button>
+          <br />
+          <p class="primaryText">Create your account</p>
+          <input
+            type="text"
+            class="mainButton col-12 signupUsername"
+            name="signupUsername"
+            placeholder="Username"
+            required
+          />
+          <input
+            type="password"
+            class="mainButton col-12 signupPassword"
+            name="signupPassword"
+            placeholder="Password"
+            required
+          />
+          <button type="submit" class="mainButton col-12">Sign up</button>
+        </form>
+      </div>
+
+      <!-- Log out -->
+      <div class="page-logout hidden">
+        <div class="addItemForm login-form">
+          <button type="button" class="backButton uiElement iconButton"></button>
+          <br />
+          <p class="primaryText">Log out?</p>
+          <button class="mainButton col-12">Log out</button>
+        </div>
+      </div>
+
+      <!-- List of galleries -->
+      <div class="page-gallery-list hidden">
+        <div class="notification hidden"></div>
+        <p class="primaryText">Galleries</p>
+        <div class="galleryList"></div>
+        <div class="center">
+          <div class="row">
+            <p class="fullCommentText helpText previousPage clickableText">
+              Previous Page
+            </p>
+            <p class="fullCommentText helpText nextPage clickableText">
+              Next Page
+            </p>
+          </div>
+        </div>
+        <div class="center">
+          <button class="mainButton col-12">Log in</button>
+        </div>
+      </div>
+
+      <!-- Gallery Page -->
+      <div class="slideViewport page-gallery hidden">
+        <div class="notification hidden"></div>
+        <!-- Loading Ring -->
+        <div class="loading-container hidden">
+          <div class="lds-dual-ring"></div>
+        </div>
+
+        <!-- Object above everything -->
+        <div class="slideContainer above slidePrev"></div>
+
+        <!-- Object on screen -->
+        <div class="slideContainer active slideCurr"></div>
+
+        <!-- Object Below Everything -->
+        <div class="slideContainer below slideNext"></div>
+      </div>
+    </div>
+    <script src="js/meact.js"></script>
+    <script src="js/api-service.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/gallery.js"></script>
+    <script src="js/gallery-list.js"></script>
+    <script src="js/login.js"></script>
+    <script src="js/logout.js"></script>
+    <script src="js/signup.js"></script>
+    <script src="js/index.js"></script>
+  </body>
+</html>
