@@ -1,38 +1,86 @@
-# Web Gallery: Deployment
+﻿# Web Gallery
 
-The objective of these assignments is to build an application called _The Web Gallery_ where users can share pictures and comments. This application is similar to existing web applications such as Facebook, Instagram or Google Photos.
+A multi-user image gallery single-page app. Anyone can browse galleries; logged-in users can comment, and each user manages their own gallery. Built for UTSC CSCC09 (Programming on the Web), with a vanilla JS frontend and an Express + SQLite backend.
 
-In this last assignment, you will concentrate on user authentication, and authorization.
+## Features
 
-## Instructions
+- Session-based authentication: sign up, log in, log out (bcrypt salted hashes, express-session)
+- Gallery list with cursor-based pagination (`before` / `after` user IDs)
+- Gallery viewer with a TikTok-style vertical slide interface: scroll wheel or swipe to move between images, with CSS transitions and a scroll cooldown
+- Add images by file upload (multer) or by URL
+- Comments: a 3-comment preview on each image plus a full paginated comments view (10 per page), visible and writable only when logged in
+- Role-based permissions enforced on the server:
+  - only the gallery owner can add or delete images
+  - a comment can be deleted by its author or by the gallery owner
+  - unauthenticated requests get 401, unauthorized ones get 403
+- Short-polling (every 5 seconds) for new galleries and for images added or deleted in the gallery you're viewing, shown as click-to-dismiss notifications
 
-Copy your assignment 3 code into this repository. You will also need to fix all issues that were found in previous assignments.
+## Tech stack
 
-### Submission
+**Backend:** Node.js (ES modules), Express 5, express-session, bcrypt, Sequelize ORM with SQLite, multer
 
-You should submit your work to your Github course repository and Gradescope.
+**Frontend:** vanilla JavaScript, no framework. Includes `meact`, a small React-inspired state library written for this project (`useState` returns a `[key, getter, setter]` triple; `useEffect` re-runs a callback whenever its dependency states change), a tiny page router, and an `apiService` module wrapping all fetch calls.
 
-You must include a url.txt which contains the URL of your deployed application. The URL should be accessible to the TAs and markers.
+**Tooling:** Docker, Prettier
 
-## Deployment Requirements
+## Architecture notes
 
-- Your assignment 3 must be deployed on a DigitalOcean droplet. (This is provided by the University.)
-- Your deployed URL must be a subdomain of `webgallery.<any domain you own>`. You may get a free domain through Github Student Developer Pack or use a domain you already own.
-- The deployed application must be accessible via HTTPS.
-- The deployed application must be running on port 443.
-- The assignment must be feature complete.
+- The gallery viewer uses three rotating slide containers (previous / current / next). On navigation the containers swap roles and the freed one is reset, which keeps transitions smooth.
+- All gallery state (current image, comments, page numbers, open panels) lives in `meact` states, and a single `useEffect` re-renders the active slide when any of them change.
+- Image responses bundle `{ image, count, topComments }`, and top comments are only included for authenticated requesters.
 
-## Syllabus
+## API overview
 
-This is a bonus assignment to allow you to make up for any lost points in previous assignments.
+Images (`/api/images`):
 
-You will be graded from a scale of 0-5 points:
+    GET    /gallery/:galleryId/first    first image in a gallery
+    GET    /gallery/:galleryId/count    number of images in a gallery
+    GET    /:id/next                    next image in the same gallery
+    GET    /:id/prev                    previous image in the same gallery
+    GET    /:id/file                    serve the file (or redirect to the URL)
+    POST   /                            add an image (auth required)
+    DELETE /:id                         delete an image and its comments (owner only)
+    GET    /:id/comments                paginated comments (auth required)
+    POST   /:id/comments                add a comment (auth required)
 
-- 0 points: No deployment or deployment does not meet the requirements.
-- 1 point: Deployment meets the requirements but the application is not feature complete.
-- 2 points: Deployment meets the requirements and the application has many code quality issues, and/or many bugs.
-- 3 points: Deployment meets the requirements and the application has some code quality issues, and/or a few bugs.
-- 4 points: Deployment meets the requirements and the application has minor code quality issues, and/or minor bugs.
-- 5 points: This is a perfect assignment!
+Users (`/api/users`):
 
-Suitable bonus points will be added to the final grade to the course. You may not exceed 30% through the assignment.
+    POST   /signup                      create account and start session
+    POST   /login                       log in
+    POST   /logout                      destroy session
+    GET    /me                          current session user
+    GET    /                            paginated list of galleries
+    GET    /count                       total number of users
+
+Comments (`/api/comments`):
+
+    DELETE /:id                         delete a comment (comment author or gallery owner)
+
+## Project structure
+
+    app.js          entry point
+    datasource.js   Sequelize / SQLite setup
+    middleware/     auth middleware (isAuthenticated)
+    models/         User, Image, Comment and their associations
+    routers/        images, users and comments routes
+    static/         frontend
+      index.html    single page with all views
+      styles/       CSS
+      js/           meact, api-service, router, and one file per page
+    Dockerfile      container build
+
+## Running locally
+
+    npm install
+    node app.js
+
+Create a `.env` file in the project root:
+
+    SESSION_SECRET=your-long-random-string
+
+Uploaded files are stored in `uploads/`.
+
+## Notes
+
+Originally a course assignment, deployed on a DigitalOcean droplet behind HTTPS.
+
